@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Scanner.h"
 #include "cpplox.h"
 #include <exception>

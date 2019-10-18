@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Token.h"
 #include <variant>
 
@@ -57,4 +56,3 @@ std::ostream& operator<<(std::ostream & stream, const Token& token)
 
 	return stream;
 }
-

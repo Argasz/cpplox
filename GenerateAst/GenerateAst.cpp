@@ -1,7 +1,6 @@
 // GenerateAst.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include "pch.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -17,23 +16,31 @@ int main(int argc, char* argv[])
 	}
 	std::string outputDir = argv[1];
 	std::vector<std::string> defs{
-		"Binary:Expr left, Token operator, Expr right",
+		"Binary:Expr left,Token op,Expr right",
 		"Grouping:Expr expression",
-		"Literal:std::variant<std::string, double> value",
-		"Unary:Token operator, Expr right"
+		"Literal:VARIANT value",
+		"Unary:Token op,Expr right"
 	};
 	defineAst(outputDir, "Expr", defs);
 }
 
 void defineAst(std::string outputDir, std::string baseName, std::vector<std::string> types)
 {
-	std::string path = outputDir + "/" + baseName + ".h";
+	std::string hPath = outputDir + baseName + ".h";
+	std::string cppPath = outputDir + baseName + ".cpp";
 
-	std::ofstream writer (path, std::ofstream::out);
-	writer.write("#include \"Token.h\"\n", 20);
-	writer.write("#include <vector>\n", 19);
-	std::string classdef = "class " + baseName + "\n{\n}";
-	writer.write(classdef.c_str(),classdef.length());
+	std::ofstream writerHead (hPath, std::ofstream::out);
+	writerHead.write("#include \"Token.h\"\n", 19);
+	writerHead.write("#include <vector>\n", 18);
+	writerHead.write("#include <variant>\n", 19);
+	writerHead.write("#define VARIANT std::variant<std::string, double>\n", 50);
+	std::string classdef = "class " + baseName + "\n{\n};";
+	writerHead.write(classdef.c_str(),classdef.length());
+	genVisitor(writerHead, baseName, types);
+
+	std::ofstream writerCpp(cppPath, std::ofstream::out);
+	std::string temp = "#include \"" + baseName + ".h\"\n";
+	writerCpp.write(temp.c_str(), temp.length());
 
 	for (auto type : types)
 	{
@@ -41,28 +48,68 @@ void defineAst(std::string outputDir, std::string baseName, std::vector<std::str
 		std::string className = classDef[0];
 		std::string fields = classDef[1];
 
-		defineType(writer, baseName, className, fields);
+		genHeader(writerHead, baseName, className, fields);
+		genCpp(writerCpp, baseName, className, fields);
 	}
+	writerHead.close();
+	writerCpp.close();
 
 }
 
-void defineType(std::ofstream& writer, std::string& baseName, std::string& className, std::string& fieldList)
+void genHeader(std::ofstream& writerHead, std::string& baseName, std::string& className, std::string& fieldList)
 {
-	std::string s("\nclass " + className + " : public baseName " + "\n{\n");
-	writer.write(s.c_str(), s.length());
-	s = "\t" + className + "(" + fieldList + ") {\n";
-	writer.write(s.c_str(), s.length());
+	std::string s("\nclass " + className + " : public " + baseName + "\n{\n");
+	writerHead.write(s.c_str(), s.length());
+	s = "\t" + className + "(" + fieldList + ");\n";
+	writerHead.write(s.c_str(), s.length());
 
 	std::vector<std::string> fields = splitString(fieldList, ',');
 	for (auto field : fields)
 	{
 		s = "\t" + field + ";\n";
-		writer.write(s.c_str(), s.length());
+		writerHead.write(s.c_str(), s.length());
 	}
 
-	writer.write(" }", 3);
+	writerHead.write(" };\n", 3);
+	
+	s = "\tvoid accept(ExprVisitor& visitor) { return std::visit(visitor, this) };\n";
+	writerHead.write(s, s.length());
 }
 
+void genCpp(std::ofstream& writerCpp, std::string & baseName, std::string & className, std::string& fieldList)
+{
+	std::string s = className + "::" + className + "(" + fieldList + ") : ";
+	writerCpp.write(s.c_str(),s.length());
+	std::vector<std::string> fields = splitString(fieldList, ',');
+
+	for (int i = 0; i < fields.size(); i++ )
+	{
+		int space = fields[i].find_first_of(" ");
+		std::string field = fields[i].substr(space + 1, fields[i].length() - space);
+		s = field + "(" + field + ")";
+		if (i != fields.size() - 1) {
+			s += ", ";
+		}
+		writerCpp.write(s.c_str(), s.length());
+	}
+
+	writerCpp.write("\n{};\n", 5);
+}
+
+void genVisitor(std::ofstream & visitWriter, std::string baseName, std::vector<std::string> types)
+{
+	std::string s = "\nstruct " + baseName + "Visitor\n{\n";
+	visitWriter.write(s.c_str(), s.length());
+
+	for (auto type : types)
+	{
+		std::vector<std::string> typeNames = splitString(type, ':');
+		std::string visitorFunc = "void operator()(" + typeNames[0] + "&);\n";
+		visitWriter.write(visitorFunc.c_str(), visitorFunc.length());
+	}
+
+	visitWriter.write("\n};\n", 4);
+}
 
 std::vector<std::string> splitString(const std::string& str, char delim)
 {
