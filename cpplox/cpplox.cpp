@@ -1,7 +1,10 @@
 // cpplox.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
+#pragma once
 #include "cpplox.h"
 #include "Scanner.h"
+#include "AstPrinter.h"
+#include "Parser.h"
 
 bool hadError = false;
 
@@ -52,21 +55,35 @@ int runPrompt()
 int run(const std::string& source)
 {
 	Scanner scanner(source);
-	std::vector<Token*> tokens = scanner.scanTokens();
+	std::vector<Token> tokens = scanner.scanTokens();
+	Parser parser(tokens);
+	Expr& expression = parser.parse();
+	if (hadError) return 1;
 
-	for (auto token : tokens)
-	{
-		std::cout << *token << '\n';
-	}
+	AstPrinter print(std::cout);
+	expression.accept(print);
+
 	return 0;
 }
 
-void error(int line, const std::string& message)
+void cpploxError(int line, const std::string& message)
 {
 	report(line,"",message);
 }
 
 void report(int line, const std::string& whence, const std::string& message)
 {
-	fprintf(stderr, "[line %d ] Error %s: %s",line, whence, message);
+	fprintf(stderr, "[line %d ] Error %s: %s",line, whence.c_str(), message.c_str());
+}
+
+void cpploxError(const Token& token, const std::string& message)
+{
+	if (token.type == TokenType::EOFF)
+	{
+		report(token.line, " at end", message);
+	}
+	else
+	{
+		report(token.line, "at '" + token.lexeme + "'", message);
+	}
 }

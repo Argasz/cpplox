@@ -50,9 +50,14 @@ const std::string tokenTypeToString(TokenType t)
 
 std::ostream& operator<<(std::ostream & stream, const Token& token)
 {
-	auto visitorLambda = [&stream](auto&& _in) { stream << " " << _in << " "; };
-	std::visit(visitorLambda, token.lit);
+	if (token.type == TokenType::NIL) {
+		stream << " nil ";
+	}
+	else
+	{ 
+		auto visitorLambda = [&stream](auto&& _in) { stream << " " << _in << " "; };
+		std::visit(visitorLambda, token.lit);
+	}
 	stream << tokenTypeToString(token.type) << " " << token.lexeme;
-
 	return stream;
 }

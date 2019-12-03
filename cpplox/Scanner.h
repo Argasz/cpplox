@@ -6,11 +6,13 @@
 #include "Token.h"
 #include <variant>
 
+typedef std::variant<std::string, double, bool, std::nullptr_t> varLiteral;
+
 class Scanner
 {
 private:
 	std::string source;
-	std::vector<Token*> tokens;
+	std::vector<Token> tokens;
 	std::unordered_map<std::string, TokenType> keywords;
 
 	int start = 0;
@@ -19,7 +21,7 @@ private:
 
 	bool isAtEnd();
 	char advance();
-	void addToken(TokenType type, std::variant<double, std::string> literal = "");
+	void addToken(TokenType type, varLiteral literal = "");
 	void scanToken();
 	bool match(char expected);
 	char peek();
@@ -31,7 +33,7 @@ private:
 	bool isAlpha(char c);
 	bool isAlphaNumeric(char c);
 public:
-	std::vector<Token*> scanTokens();
+	std::vector<Token> scanTokens();
 
 	Scanner(std::string source);
 	~Scanner() = default;

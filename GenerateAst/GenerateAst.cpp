@@ -16,10 +16,10 @@ int main(int argc, char* argv[])
 	}
 	std::string outputDir = argv[1];
 	std::vector<std::string> defs{
-		"Binary:Expr left,Token op,Expr right",
-		"Grouping:Expr expression",
+		"Binary:Expr& left,Token op,Expr& right",
+		"Grouping:Expr& expression",
 		"Literal:VARIANT value",
-		"Unary:Token op,Expr right"
+		"Unary:Token op,Expr& right"
 	};
 	defineAst(outputDir, "Expr", defs);
 }
@@ -34,7 +34,7 @@ void defineAst(std::string outputDir, std::string baseName, std::vector<std::str
 	writerHead.write("#include <vector>\n", 18);
 	writerHead.write("#include <variant>\n", 19);
 	writerHead.write("#define VARIANT std::variant<std::string, double>\n", 50);
-	std::string classdef = "class " + baseName + "\n{\n};";
+	std::string classdef = "class " + baseName + "\n{\npublic:\nvirtual void accept(I" + baseName + "Visitor& visitor) = 0;\n};";
 	writerHead.write(classdef.c_str(),classdef.length());
 	genVisitor(writerHead, baseName, types);
 
@@ -60,6 +60,7 @@ void genHeader(std::ofstream& writerHead, std::string& baseName, std::string& cl
 {
 	std::string s("\nclass " + className + " : public " + baseName + "\n{\n");
 	writerHead.write(s.c_str(), s.length());
+	writerHead.write("public:\n", 8);
 	s = "\t" + className + "(" + fieldList + ");\n";
 	writerHead.write(s.c_str(), s.length());
 
@@ -69,11 +70,10 @@ void genHeader(std::ofstream& writerHead, std::string& baseName, std::string& cl
 		s = "\t" + field + ";\n";
 		writerHead.write(s.c_str(), s.length());
 	}
-
-	writerHead.write(" };\n", 3);
 	
-	s = "\tvoid accept(ExprVisitor& visitor) { return std::visit(visitor, this) };\n";
-	writerHead.write(s, s.length());
+	s = "\tvoid accept(I" + baseName + "Visitor& visitor) { visitor(*this); };\n";
+	writerHead.write(s.c_str(), s.length());
+	writerHead.write(" };\n", 3);
 }
 
 void genCpp(std::ofstream& writerCpp, std::string & baseName, std::string & className, std::string& fieldList)
@@ -98,13 +98,14 @@ void genCpp(std::ofstream& writerCpp, std::string & baseName, std::string & clas
 
 void genVisitor(std::ofstream & visitWriter, std::string baseName, std::vector<std::string> types)
 {
-	std::string s = "\nstruct " + baseName + "Visitor\n{\n";
+	std::string s = "\nclass I" + baseName + "Visitor\n{\n";
 	visitWriter.write(s.c_str(), s.length());
+	visitWriter.write("public:\n", 8);
 
 	for (auto type : types)
 	{
 		std::vector<std::string> typeNames = splitString(type, ':');
-		std::string visitorFunc = "void operator()(" + typeNames[0] + "&);\n";
+		std::string visitorFunc = "virtual void visit(" + typeNames[0] + "&) = 0;\n";
 		visitWriter.write(visitorFunc.c_str(), visitorFunc.length());
 	}
 

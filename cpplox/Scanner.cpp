@@ -1,6 +1,9 @@
+#pragma once
 #include "Scanner.h"
 #include "cpplox.h"
 #include <exception>
+
+typedef std::variant<std::string, double, bool, std::nullptr_t> varLiteral;
 
 bool Scanner::isAtEnd()
 {
@@ -12,10 +15,10 @@ char Scanner::advance()
 	return source.at(current++);
 }
 
-void Scanner::addToken(TokenType type, std::variant<double, std::string> literal)
+void Scanner::addToken(TokenType type, varLiteral literal)
 {
 	std::string text = source.substr(start, current-start);
-	tokens.push_back(new Token(type, text, literal, line));
+	tokens.push_back(Token(type, text, literal, line));
 }
 
 void Scanner::scanToken()
@@ -70,7 +73,7 @@ void Scanner::scanToken()
 		}
 		else
 		{
-			error(line, "Unexpected character.");
+			cpploxError(line, "Unexpected character.");
 		}
 		break;
 	}
@@ -107,7 +110,7 @@ void Scanner::string()
 
 	if (isAtEnd())
 	{
-		error(line, "Unterminated string.");
+		cpploxError(line, "Unterminated string.");
 		return;
 	}
 
@@ -180,14 +183,14 @@ bool Scanner::isAlphaNumeric(char c)
 	return isAlpha(c) || isDigit(c);
 }
 
-std::vector<Token*> Scanner::scanTokens()
+std::vector<Token> Scanner::scanTokens()
 {
 	while (!isAtEnd())
 	{
 		start = current;
 		scanToken();
 	}
-	tokens.push_back(new Token(TokenType::EOFF, "", "", line));
+	tokens.push_back(Token(TokenType::EOFF, "", "", line));
 	return tokens;
 }
 

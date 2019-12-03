@@ -153,15 +153,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AstPrinter.h" />
     <ClInclude Include="cpplox.h" />
     <ClInclude Include="Expr.h" />
+    <ClInclude Include="Parser.h" />
     <ClInclude Include="Scanner.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="TokenType.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AstPrinter.cpp" />
     <ClCompile Include="cpplox.cpp" />
     <ClCompile Include="Expr.cpp" />
+    <ClCompile Include="Parser.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

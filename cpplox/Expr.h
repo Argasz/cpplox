@@ -1,39 +1,65 @@
+#pragma once
 #include "Token.h"
 #include <vector>
 #include <variant>
-#define VARIANT std::variant<std::string, double>
+
+typedef std::variant<std::string, double, bool, std::nullptr_t> varLiteral;
+
+class Binary;
+class Grouping;
+class Literal;
+class Unary;
+
+class IExprVisitor
+{
+public:
+	virtual void visit(Binary& expr) = 0;
+	virtual void visit(Grouping& expr) = 0;
+	virtual void visit(Literal& expr) = 0;
+	virtual void visit(Unary& expr) = 0;
+
+};
+
+
 class Expr
 {
-};
-struct ExprVisitor
-{
-void operator()(Binary&);
-void operator()(Grouping&);
-void operator()(Literal&);
-void operator()(Unary&);
-
+public:
+	virtual void accept(IExprVisitor& visitor) = 0;
 };
 
 class Binary : public Expr
 {
-	Binary(Expr left,Token op,Expr right);
-	Expr left;
+public:
+	Binary(Expr& left,Token op,Expr& right);
+	Expr& left;
 	Token op;
-	Expr right;
+	Expr& right;
+	void accept(IExprVisitor& visitor) { visitor.visit(*this); };
  };
 class Grouping : public Expr
 {
-	Grouping(Expr expression);
-	Expr expression;
+public:
+	Grouping(Expr& expression);
+	Expr& expression;
+	void accept(IExprVisitor& visitor) { visitor.visit(*this); };
  };
 class Literal : public Expr
 {
-	Literal(VARIANT value);
-	VARIANT value;
+public:
+	Literal(varLiteral value);
+	varLiteral value;
+	void accept(IExprVisitor& visitor) { visitor.visit(*this); };
+	friend std::ostream& operator << (std::ostream& stream, const Literal& lit);
  };
 class Unary : public Expr
 {
-	Unary(Token op,Expr right);
+public:
+	Unary(Token op,Expr& right);
 	Token op;
-	Expr right;
+	Expr& right;
+	void accept(IExprVisitor& visitor) { visitor.visit(*this); }
  };
+
+
+
+std::ostream& operator << (std::ostream& stream, const Literal& lit);
