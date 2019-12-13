@@ -12,7 +12,7 @@ class Scanner
 {
 private:
 	std::string source;
-	std::vector<Token> tokens;
+	std::vector<Token*> tokens;
 	std::unordered_map<std::string, TokenType> keywords;
 
 	int start = 0;
@@ -33,7 +33,7 @@ private:
 	bool isAlpha(char c);
 	bool isAlphaNumeric(char c);
 public:
-	std::vector<Token> scanTokens();
+	std::vector<Token*> scanTokens();
 
 	Scanner(std::string source);
 	~Scanner() = default;

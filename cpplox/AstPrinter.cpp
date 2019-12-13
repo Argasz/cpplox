@@ -1,38 +1,49 @@
 #include "AstPrinter.h"
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <algorithm>
+#include <iterator>
 
-void AstPrinter::visit(Binary& expr)
+varLiteral AstPrinter::visit(Binary& expr)
 {
 	std::string s = expr.op.lexeme;
-	parenthesize(s, { &expr.left,&expr.right });
+	return parenthesize(s, { &expr.left,&expr.right });
 }
 
-void AstPrinter::visit(Grouping& expr)
+varLiteral AstPrinter::visit(Grouping& expr)
 {
 	std::string grp = "group";
-	parenthesize(grp, {&expr.expression});
+	return parenthesize(grp, {&expr.expression});
 }
 
-void AstPrinter::visit(Literal& expr)
+varLiteral AstPrinter::visit(Literal& expr)
 {
-	os << expr.value;
+	return expr.value;
 }
 
-void AstPrinter::visit(Unary & expr)
+varLiteral AstPrinter::visit(Unary & expr)
 {
-	parenthesize(expr.op.lexeme, { &expr.right });
+	return parenthesize(expr.op.lexeme, { &expr.right });
 }
 
-void AstPrinter::parenthesize(std::string & name, std::vector<Expr*> exprs)
+std::string AstPrinter::parenthesize(std::string & name, std::vector<Expr*> exprs)
 {
-	os << "(";
-	os << name;
-	for (auto expr : exprs)
+	std::ostringstream result;
+	result << "(";
+	result << name << " ";
+
+	std::transform(begin(exprs), end(exprs), std::ostream_iterator<std::string>(result, " "),
+		[this](Expr* e) -> std::string
 	{
-		os << " ";
-		expr->accept(*this);
+		std::ostringstream ret;
+		ret << e->accept(*this);
+		return ret.str();
 	}
-	os << ")";
+	);
+
+	result << ")";
+
+	return result.str();
 }
 

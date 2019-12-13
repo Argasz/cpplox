@@ -43,7 +43,7 @@ int runPrompt()
 {
 	for (;;)
 	{
-		std::cout << "> ";
+		std::cout << "\n> ";
 		char input[255];
 		std::cin.getline(input,255);
 		run(input);
@@ -55,13 +55,14 @@ int runPrompt()
 int run(const std::string& source)
 {
 	Scanner scanner(source);
-	std::vector<Token> tokens = scanner.scanTokens();
+	std::vector<Token*> tokens = scanner.scanTokens();
 	Parser parser(tokens);
-	Expr& expression = parser.parse();
+	Expr* expression = parser.parse();
 	if (hadError) return 1;
 
-	AstPrinter print(std::cout);
-	expression.accept(print);
+	AstPrinter print;
+	auto str = expression->accept(print);
+	std::cout << str;
 
 	return 0;
 }
@@ -73,7 +74,8 @@ void cpploxError(int line, const std::string& message)
 
 void report(int line, const std::string& whence, const std::string& message)
 {
-	fprintf(stderr, "[line %d ] Error %s: %s",line, whence.c_str(), message.c_str());
+	fprintf(stderr, "[line %d ] Error %s: %s\n",line, whence.c_str(), message.c_str());
+	hadError = true;
 }
 
 void cpploxError(const Token& token, const std::string& message)

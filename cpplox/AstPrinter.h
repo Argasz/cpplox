@@ -5,12 +5,11 @@
 class AstPrinter : public IExprVisitor
 {
 public:
-	AstPrinter(std::ostream& ostream) : os(ostream) {};
-	virtual void visit(Binary&);
-	virtual void visit(Grouping&);
-	virtual void visit(Literal&);
-	virtual void visit(Unary&);
+	AstPrinter() {};
+	virtual varLiteral visit(Binary&);
+	virtual varLiteral visit(Grouping&);
+	virtual varLiteral visit(Literal&);
+	virtual varLiteral visit(Unary&);
 private:
-	std::ostream& os;
-	void parenthesize(std::string& name, std::vector<Expr*> exprs);
+	std::string parenthesize(std::string& name, std::vector<Expr*> exprs);
 };

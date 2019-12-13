@@ -7,125 +7,126 @@ Parser::~Parser()
 {
 }
 
-Expr & Parser::parse()
+Expr* Parser::parse()
 {
 	try {
 		return expression();
 	}
 	catch (const std::exception& e)
 	{
-		Literal ret(nullptr);
-		return ret;
+		return new Literal(nullptr);
 	}
 }
 
-Expr & Parser::expression()
+Expr* Parser::expression()
 {
 	return equality();
 }
 
-Expr & Parser::equality()
+Expr* Parser::equality()
 {
-	Expr& expr = comparison();
+	Expr* expr = comparison();
 
 	while (match({ TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL }))
 	{
 		Token op = previous();
-		Expr& right = comparison();
-		expr = Binary(expr, op, right);
+		Expr* right = comparison();
+		expr = new Binary(*expr, op, *right);
+		/*auto bin = new Binary(expr, op, right);
+		return *bin;*/
 	}
 
 	return expr;
 }
 
-Expr & Parser::comparison()
+Expr* Parser::comparison()
 {
-	Expr& expr = addition();
+	Expr* expr = addition();
 
 	while (match({ TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL }))
 	{
 		Token op = previous();
-		Expr& right = addition();
-		expr = Binary(expr, op, right);
+		Expr* right = addition();
+		expr = new Binary(*expr, op, *right);
+		/*auto bin = new Binary(expr, op, right);
+		return *bin;*/
 	}
 
 	return expr;
 }
 
-Expr & Parser::addition()
+Expr* Parser::addition()
 {
-	Expr& expr = multiplication();
+	Expr* expr = multiplication();
 
 	while (match({ TokenType::MINUS, TokenType::PLUS }))
 	{
 		Token op = previous();
-		Expr& right = multiplication();
-		expr = Binary(expr, op, right);
+		Expr* right = multiplication();
+		expr = new Binary(*expr, op, *right);
+		//auto bin = new Binary(expr, op, right);
+		//return *bin;
 	}
 
 	return expr;
 }
 
-Expr & Parser::multiplication()
+Expr* Parser::multiplication()
 {
-	Expr& expr = unary();
+	Expr* expr = unary();
 
 	while (match({ TokenType::SLASH, TokenType::STAR }))
 	{
 		Token op = previous();
-		Expr& right = unary();
-		expr = Binary(expr, op, right);
+		Expr* right = unary();
+		expr = new Binary(*expr, op, *right);
+		//auto ret = new Binary(expr, op, right);
+		//return *ret;
 	}
 
 	return expr;
 }
 
-Expr & Parser::unary()
+Expr* Parser::unary()
 {
 	if (match({ TokenType::BANG, TokenType::MINUS }))
 	{
 		Token op = previous();
-		Expr& right = unary();
+		Expr* right = unary();
 		
-		Unary ret = Unary(op, right);
-		return ret;
+		return new Unary(op, *right);
 	}
 
 	return primary();
 }
 
-Expr & Parser::primary()
+Expr* Parser::primary()
 {
 	varLiteral val;
 	if (match({ TokenType::FALSE }))
 	{ 
 		val = false;
-		Literal ret = Literal(val);
-		return ret;
+		return new Literal(val);
 	}
 	if (match({ TokenType::TRUE }))
 	{
 		val = true;
-		Literal ret = Literal(val);
-		return ret;
+		return new Literal(val);
 	}
 	if (match({ TokenType::NIL }))
 	{
 		val = nullptr;
-		Literal ret = Literal(val);
-		return ret;
+		return new Literal(val);
 	}
 	if (match({TokenType::NUMBER, TokenType::STRING}))
 	{
-		Literal ret = Literal(previous().lit);
-		return ret;
+		return new Literal(previous().lit);
 	}
 	if (match({ TokenType::LEFT_PAREN }))
 	{
-		Expr& expr = expression();
+		Expr* expr = expression();
 		consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
-		Grouping ret(expr);
-		return ret;
+		return new Grouping(*expr);
 	}
 	
 	throw error(peek(), "Expect expression.");
@@ -144,7 +145,7 @@ bool Parser::match(std::vector<TokenType> types)
 	return false;
 }
 
-Token Parser::consume(TokenType type, std::string message) {
+Token& Parser::consume(TokenType type, std::string message) {
 	if (check(type)) {
 		return advance();
 	}
@@ -160,7 +161,7 @@ bool Parser::check(TokenType type)
 	return peek().type == type;
 }
 
-Token Parser::advance()
+Token& Parser::advance()
 {
 	if (!isAtEnd())
 		current++;
@@ -173,14 +174,14 @@ bool Parser::isAtEnd()
 	return peek().type == TokenType::EOFF;
 }
 
-Token Parser::peek()
+Token& Parser::peek()
 {
-	return tokens.at(current);
+	return *tokens.at(current);
 }
 
-Token Parser::previous()
+Token& Parser::previous()
 {
-	return tokens.at(current-1);
+	return *tokens.at(current-1);
 }
 
 ParseException Parser::error(const Token& token, const std::string& message)
