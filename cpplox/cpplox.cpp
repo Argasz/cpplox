@@ -5,8 +5,11 @@
 #include "Scanner.h"
 #include "AstPrinter.h"
 #include "Parser.h"
+#include "Interpreter.h"
 
 bool hadError = false;
+bool hadRuntimeError = false;
+Interpreter* interpreter = new Interpreter();
 
 int main(int argc, char* argv[])
 {
@@ -35,6 +38,8 @@ int runFile(const std::string& path)
 
 	if (hadError)
 		return 65;
+	if (hadRuntimeError)
+		return 70;
 	
 	return 0;
 }
@@ -60,9 +65,11 @@ int run(const std::string& source)
 	Expr* expression = parser.parse();
 	if (hadError) return 1;
 
-	AstPrinter print;
+	interpreter->interpret(*expression);
+
+	/*AstPrinter print;
 	auto str = expression->accept(print);
-	std::cout << str;
+	std::cout << str;*/
 
 	return 0;
 }
@@ -88,4 +95,11 @@ void cpploxError(const Token& token, const std::string& message)
 	{
 		report(token.line, "at '" + token.lexeme + "'", message);
 	}
+}
+
+void runtimeError(const LRunTimeError& e)
+{
+	std::cout << e.what();
+	std::cout << "\n[line " << e.token.line << "]";
+	hadRuntimeError = true;
 }
