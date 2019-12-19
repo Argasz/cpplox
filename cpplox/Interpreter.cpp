@@ -32,7 +32,7 @@ varLiteral Interpreter::visit(Literal & expr)
 
 varLiteral Interpreter::visit(Grouping & expr)
 {
-	return evaluate(expr);
+	return evaluate(expr.expression);
 }
 
 varLiteral Interpreter::visit(Unary & expr)
@@ -65,6 +65,7 @@ varLiteral Interpreter::visit(Binary & expr)
 		return varLiteral(std::get<double>(left) - std::get<double>(right));
 	case TokenType::SLASH:
 		checkNumberOperands(expr.op, left, right);
+		checkDivisionByZero(expr.op, right);
 		return varLiteral(std::get<double>(left) / std::get<double>(right));
 	case TokenType::STAR:
 		checkNumberOperands(expr.op, left, right);
@@ -91,12 +92,10 @@ varLiteral Interpreter::visit(Binary & expr)
 	case TokenType::LESS_EQUAL:
 		checkNumberOperands(expr.op, left, right);
 		return varLiteral(std::get<double>(left) <= std::get<double>(right));
-	case TokenType::EQUAL:
+	case TokenType::EQUAL_EQUAL:
 		return isEqual(left, right);
 	case TokenType::BANG_EQUAL:
 		return !isEqual(left, right);
-
-
 	}
 
 	//unreachable
@@ -150,4 +149,14 @@ void Interpreter::checkNumberOperands(Token op, varLiteral left, varLiteral righ
 	}
 
 	throw LRunTimeError(op, "Operands must be numbers");
+}
+
+void Interpreter::checkDivisionByZero(Token op, varLiteral right)
+{
+	if (std::get<double>(right) == 0.0)
+	{
+		throw LRunTimeError(op, "Division by zero");
+	}
+
+	return;
 }

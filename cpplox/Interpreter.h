@@ -6,15 +6,16 @@ class LRunTimeError : public std::exception
 public:
 	const Token token;
 	const std::string msg;
+	std::string message;
 
-	LRunTimeError(const Token& token, std::string msg) : token(token){}
+	LRunTimeError(const Token& token, const std::string& msg) : token(token), msg(msg){
+		message = token.lexeme;
+		message += " ";
+		message += msg;
+	}
 	const char* what() const throw()
 	{
-		std::string ret = token.lexeme;
-		ret += " ";
-		ret += msg;
-
-		return ret.c_str();
+		return message.c_str();
 	}
 
 };
@@ -43,6 +44,7 @@ private:
 	bool isEqual(varLiteral a, varLiteral b);
 	void checkNumberOperand(Token op, varLiteral operand);
 	void checkNumberOperands(Token op, varLiteral left, varLiteral right);
+	void checkDivisionByZero(Token op, varLiteral right);
 };
 
 
