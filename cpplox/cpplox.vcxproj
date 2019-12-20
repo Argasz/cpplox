@@ -159,6 +159,7 @@
     <ClInclude Include="Interpreter.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="Scanner.h" />
+    <ClInclude Include="Stmt.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="TokenType.h" />
   </ItemGroup>
@@ -175,6 +176,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Scanner.cpp" />
+    <ClCompile Include="Stmt.cpp" />
     <ClCompile Include="Token.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

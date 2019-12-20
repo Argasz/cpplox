@@ -3,6 +3,8 @@
 #include "Token.h"
 #include "Expr.h"
 
+class Stmt;
+
 class ParseException : public std::exception
 {
 	const char* what() const throw()
@@ -15,7 +17,7 @@ class Parser
 {
 public:
 	Parser(std::vector<Token*> tokens) : tokens(tokens) {};
-	Expr* parse();
+	std::vector<Stmt*>* parse();
 	~Parser();
 private:
 	std::vector<Token*> tokens;
@@ -28,6 +30,10 @@ private:
 	Expr* multiplication();
 	Expr* unary();
 	Expr* primary();
+
+	Stmt* statement();
+	Stmt* printStatement();
+	Stmt* expressionStatement();
 
 	bool match(std::vector<TokenType> types);
 	Token& consume(TokenType token, std::string message);

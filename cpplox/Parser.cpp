@@ -1,5 +1,8 @@
+#pragma once
 #include "Parser.h"
 #include "cpplox.h"
+#include <vector>
+#include "Stmt.h"
 
 typedef std::variant<std::string, double, bool, std::nullptr_t> varLiteral;
 
@@ -7,20 +10,44 @@ Parser::~Parser()
 {
 }
 
-Expr* Parser::parse()
+std::vector<Stmt*>* Parser::parse()
 {
-	try {
-		return expression();
-	}
-	catch (const std::exception& e)
+	auto stmts = new std::vector<Stmt*>();
+	while (!isAtEnd())
 	{
-		return new Literal(nullptr);
+		stmts->push_back(statement());
 	}
+	return stmts;
 }
 
 Expr* Parser::expression()
 {
 	return equality();
+}
+
+Stmt * Parser::statement()
+{
+	if (match({ TokenType::PRINT }))
+	{
+		return printStatement();
+	}
+
+	return expressionStatement();
+}
+
+Stmt * Parser::printStatement()
+{
+	Expr* value = expression();
+	consume(TokenType::SEMICOLON, "Expect ';' after value.");
+	return new PrintStmt(*value);
+}
+
+Stmt * Parser::expressionStatement()
+{
+	Expr* expr = expression();
+	consume(TokenType::SEMICOLON, "Expect ';' after expression.");
+	return new ExpressionStmt(*expr);
+
 }
 
 Expr* Parser::equality()

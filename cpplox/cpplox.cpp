@@ -67,10 +67,6 @@ int run(const std::string& source)
 
 	interpreter->interpret(*expression);
 
-	/*AstPrinter print;
-	auto str = expression->accept(print);
-	std::cout << str;*/
-
 	return 0;
 }
 
