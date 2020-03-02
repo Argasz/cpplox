@@ -4,7 +4,7 @@
 #include "TokenType.h"
 
 
-typedef std::variant<std::string, double, bool, std::nullptr_t> varLiteral;
+typedef std::variant<std::string, double, bool, std::nullptr_t, std::monostate> varLiteral;
 
 class Token
 {

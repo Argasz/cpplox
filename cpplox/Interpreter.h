@@ -1,5 +1,6 @@
 #pragma once
 #include "Expr.h"
+#include "Stmt.h"
 
 class LRunTimeError : public std::exception
 {
@@ -21,7 +22,7 @@ public:
 };
 
 
-class Interpreter : public IExprVisitor
+class Interpreter : public IExprVisitor, public IStmtVisitor
 {
 public:
 	Interpreter();
