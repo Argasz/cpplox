@@ -50,6 +50,32 @@ Stmt * Parser::expressionStatement()
 
 }
 
+Stmt * Parser::declarationStatement()
+{
+	try {
+		if (match({ TokenType::VAR }))
+			return varDeclarationStatement();
+		return statement();
+	}
+	catch (ParseException e)
+	{
+		synchronize();
+		return nullptr;
+	}
+}
+
+Stmt * Parser::varDeclarationStatement()
+{
+	Token name = consume(TokenType::IDENTIFIER, "Expect variable name");
+	Expr* initializer;
+
+	if (match({ TokenType::EQUAL }))
+		initializer = expression();
+
+	consume(TokenType::SEMICOLON, "Expect ';' after variable declaration.");
+	return new VarStmt(name, initializer);
+}
+
 Expr* Parser::equality()
 {
 	Expr* expr = comparison();

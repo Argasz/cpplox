@@ -34,6 +34,8 @@ private:
 	Stmt* statement();
 	Stmt* printStatement();
 	Stmt* expressionStatement();
+	Stmt* declarationStatement();
+	Stmt* varDeclarationStatement();
 
 	bool match(std::vector<TokenType> types);
 	Token& consume(TokenType token, std::string message);

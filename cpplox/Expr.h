@@ -17,6 +17,7 @@ public:
 	virtual varLiteral visit(Grouping& expr) = 0;
 	virtual varLiteral visit(Literal& expr) = 0;
 	virtual varLiteral visit(Unary& expr) = 0;
+	virtual varLiteral visit(Variable& expr) = 0;
 
 };
 
@@ -59,6 +60,14 @@ public:
 	Expr& right;
 	varLiteral accept(IExprVisitor& visitor) { return visitor.visit(*this); }
  };
+
+class Variable : public Expr
+{
+public:
+	Variable(Token name) : name(name) {};
+	const Token name;
+	varLiteral accept(IExprVisitor& visitor) { return visitor.visit(*this); }
+};
 
 
 
