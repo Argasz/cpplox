@@ -1,4 +1,4 @@
-#pragma once
+
 #include "Parser.h"
 #include "cpplox.h"
 #include <vector>
