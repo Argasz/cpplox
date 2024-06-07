@@ -1,13 +1,14 @@
 #include "Expr.h"
-Binary::Binary(Expr& left,Token op,Expr& right) : left(left), op(op), right(right){};
-Grouping::Grouping(Expr& expression) : expression(expression){};
-Literal::Literal(varLiteral  value) : value(value){};
-Unary::Unary(Token op,Expr& right) : op(op), right(right){};
+#include <ostream>
+#include "cpplox.cpp"
+Binary::Binary(std::unique_ptr<Expr> left, Token op, std::unique_ptr<Expr> right) : left(std::move(left)), op(op), right(std::move(right)){};
+Grouping::Grouping(std::unique_ptr<Expr> expression) : expression(std::move(expression)){};
+Literal::Literal(Var_literal  value) : value(value){};
+Unary::Unary(Token op, std::unique_ptr<Expr> right) : op(op), right(std::move(right)){};
 
 std::ostream & operator<<(std::ostream & stream, const Literal & lit)
 {
-	auto visitorLambda = [&stream](auto&& _in) { stream << " " << _in << " "; };
-	std::visit(visitorLambda, lit.value);
+	unpack_write_to_stream(stream, lit.value);
 
 	return stream;
 }

@@ -2,26 +2,26 @@
 #include <variant>
 #include <string>
 #include "Expr.h"
-typedef std::variant<std::string, double, bool, std::nullptr_t, std::monostate> varLiteral;
+typedef std::variant<std::string, double, bool, std::nullptr_t, std::monostate> Var_literal;
 
 class IStmtVisitor
 {
 public:
-	virtual varLiteral visit(BlockStmt& stmt) = 0;
-	virtual varLiteral visit(ClassStmt& expr) = 0;
-	virtual varLiteral visit(ExpressionStmt& expr) = 0;
-	virtual varLiteral visit(FunctionStmt& expr) = 0;
-	virtual varLiteral visit(IfStmt& expr) = 0;
-	virtual varLiteral visit(PrintStmt& expr) = 0;
-	virtual varLiteral visit(ReturnStmt& expr) = 0;
-	virtual varLiteral visit(VarStmt& expr) = 0;
-	virtual varLiteral visit(WhileStmt& expr) = 0;
+	//virtual Var_literal visit(BlockStmt& stmt) = 0;
+	//virtual Var_literal visit(ClassStmt& expr) = 0;
+	virtual Var_literal visit(ExpressionStmt& expr) = 0;
+	//virtual Var_literal visit(FunctionStmt& expr) = 0;
+	//virtual Var_literal visit(IfStmt& expr) = 0;
+	virtual Var_literal visit(PrintStmt& expr) = 0;
+	//virtual Var_literal visit(ReturnStmt& expr) = 0;
+	//virtual Var_literal visit(VarStmt& expr) = 0;
+	//virtual Var_literal visit(WhileStmt& expr) = 0;
 };
 
 class Stmt
 {
 public:
-	virtual varLiteral accept(IStmtVisitor& visitor) = 0;
+	virtual Var_literal accept(IStmtVisitor& visitor) = 0;
 };
 
 
@@ -32,7 +32,7 @@ public:
 
 	ExpressionStmt(Expr& expression) : expression(&expression) {};
 
-	varLiteral accept(IStmtVisitor& visitor) 
+	Var_literal accept(IStmtVisitor& visitor) 
 	{
 		return visitor.visit(*this);
 	};
@@ -44,7 +44,7 @@ public:
 	const Expr* expression;
 	PrintStmt(Expr& expr) : expression(&expr) {}//change to pointers or whatever
 
-	varLiteral accept(IStmtVisitor& visitor)
+	Var_literal accept(IStmtVisitor& visitor)
 	{
 		return visitor.visit(*this);
 	};

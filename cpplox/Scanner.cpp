@@ -3,7 +3,7 @@
 #include "cpplox.h"
 #include <exception>
 
-typedef std::variant<std::string, double, bool, std::nullptr_t, std::monostate> varLiteral;
+//typedef std::variant<std::string, double, bool, std::nullptr_t, std::monostate> Var_literal;
 
 bool Scanner::isAtEnd()
 {
@@ -15,10 +15,10 @@ char Scanner::advance()
 	return source.at(current++);
 }
 
-void Scanner::addToken(TokenType type, varLiteral literal)
+void Scanner::addToken(TokenType type, Var_literal literal)
 {
-	std::string text = source.substr(start, current-start);
-	tokens.push_back(new Token(type, text, literal, line));
+	std::string text = source.substr(start, current - start);
+	tokens.push_back(Token(type, text, literal, line));
 }
 
 void Scanner::scanToken()
@@ -51,18 +51,17 @@ void Scanner::scanToken()
 			addToken(TokenType::SLASH);
 		}
 		break;
-	case ' ':
+	case ' ': // Ignore whitespace.
 	case '\r':
 	case '\t':
-		// Ignore whitespace.
 		break;
 	case '\n':
 		++line;
 		break;
-	case '"': 
-		string(); 
+	case '"':
+		string();
 		break;
-	default: 
+	default:
 		if (isDigit(c))
 		{
 			number();
@@ -117,8 +116,8 @@ void Scanner::string()
 	advance();
 
 	char test = peek();
-	
-	std::string value = source.substr(start + 1, current-start-2);
+
+	std::string value = source.substr(start + 1, current - start - 2);
 	addToken(TokenType::STRING, value);
 }
 
@@ -140,7 +139,7 @@ void Scanner::number()
 		while (isDigit(peek())) advance();
 	}
 
-	addToken(TokenType::NUMBER, std::stod(source.substr(start, current-start)));
+	addToken(TokenType::NUMBER, std::stod(source.substr(start, current - start)));
 }
 
 char Scanner::peekNext()
@@ -155,27 +154,27 @@ void Scanner::identifier()
 {
 	while (isAlphaNumeric(peek()))
 		advance();
-	
-	std::string text = source.substr(start, current-start);
+
+	std::string text = source.substr(start, current - start);
 	TokenType type;
-	try{
+	try {
 		type = keywords.at(text);
 		addToken(type);
 	}
-	catch(...)
+	catch (...)
 	{
 		type = TokenType::IDENTIFIER;
 		addToken(type);
 	}
 
-	
+
 }
 
 bool Scanner::isAlpha(char c)
 {
 	return	(c >= 'a' && c <= 'z') ||
-			(c >= 'A' && c <= 'Z') ||
-			c == '_';
+		(c >= 'A' && c <= 'Z') ||
+		c == '_';
 }
 
 bool Scanner::isAlphaNumeric(char c)
@@ -183,21 +182,21 @@ bool Scanner::isAlphaNumeric(char c)
 	return isAlpha(c) || isDigit(c);
 }
 
-std::vector<Token*> Scanner::scanTokens()
+std::vector<Token> Scanner::scanTokens()
 {
 	while (!isAtEnd())
 	{
 		start = current;
 		scanToken();
 	}
-	tokens.push_back(new Token(TokenType::EOFF, "", "", line));
+	tokens.push_back(Token(TokenType::EOFF, "", "", line));
 	return tokens;
 }
 
 Scanner::Scanner(std::string source)
 {
 	this->source = source;
-	keywords.emplace("and",	TokenType::AND);
+	keywords.emplace("and", TokenType::AND);
 	keywords.emplace("class", TokenType::CLASS);
 	keywords.emplace("else", TokenType::ELSE);
 	keywords.emplace("false", TokenType::FALSE);

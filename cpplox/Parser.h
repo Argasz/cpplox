@@ -16,34 +16,34 @@ class ParseException : public std::exception
 class Parser
 {
 public:
-	Parser(std::vector<Token*> tokens) : tokens(tokens) {};
-	std::vector<Stmt*>* parse();
+	Parser(std::vector<Token> tokens) : tokens(tokens) {};
+	std::vector<std::unique_ptr<Stmt>> parse();
 	~Parser();
 private:
-	std::vector<Token*> tokens;
-	int current = 0;
+	std::vector<Token> tokens;
+	std::vector<Token>::size_type current = 0;
 	
-	Expr* expression();
-	Expr* equality();
-	Expr* comparison();
-	Expr* addition();
-	Expr* multiplication();
-	Expr* unary();
-	Expr* primary();
+	std::unique_ptr<Expr> expression();
+	std::unique_ptr<Expr> equality();
+	std::unique_ptr<Expr> comparison();
+	std::unique_ptr<Expr> addition();
+	std::unique_ptr<Expr> multiplication();
+	std::unique_ptr<Expr> unary();
+	std::unique_ptr<Expr> primary();
 
-	Stmt* statement();
-	Stmt* printStatement();
-	Stmt* expressionStatement();
-	Stmt* declarationStatement();
-	Stmt* varDeclarationStatement();
+	std::unique_ptr<Stmt> statement();
+	std::unique_ptr<Stmt> printStatement();
+	std::unique_ptr<Stmt> expressionStatement();
+	std::unique_ptr<Stmt> declarationStatement();
+	std::unique_ptr<Stmt> varDeclarationStatement();
 
 	bool match(std::vector<TokenType> types);
-	Token& consume(TokenType token, std::string message);
+	Token consume(TokenType token, std::string message);
 	bool check(TokenType type);
-	Token& advance();
-	bool isAtEnd();
-	Token& peek();
-	Token& previous();
+	Token advance();
+	bool isAtEnd() const;
+	Token peek() const;
+	Token previous() const;
 	ParseException error(const Token& token, const std::string& message);
 	void synchronize();
 };

@@ -1,5 +1,7 @@
 #include "Token.h"
 #include <variant>
+#include <ostream>
+#include "cpplox.cpp"
 
 const std::string tokenTypeToString(TokenType t)
 {
@@ -48,16 +50,9 @@ const std::string tokenTypeToString(TokenType t)
 	}
 }
 
-std::ostream& operator<<(std::ostream & stream, const Token& token)
+std::ostream& operator<<(std::ostream& stream, const Token& token)
 {
-	if (token.type == TokenType::NIL) {
-		stream << " nil ";
-	}
-	else
-	{ 
-		auto visitorLambda = [&stream](auto&& _in) { stream << " " << _in << " "; };
-		std::visit(visitorLambda, token.lit);
-	}
+	unpack_write_to_stream(stream, token.lit);
 	stream << tokenTypeToString(token.type) << " " << token.lexeme;
 	return stream;
 }

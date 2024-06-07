@@ -12,11 +12,11 @@ Interpreter::~Interpreter()
 {
 }
 
-void Interpreter::interpret(Expr & expression)
+void Interpreter::interpret(const Expr & expression) const
 {
 	try
 	{
-		varLiteral val = evaluate(expression);
+		Var_literal val = evaluate(expression);
 		std::cout << val;
 	}
 	catch (const LRunTimeError& e)
@@ -25,73 +25,73 @@ void Interpreter::interpret(Expr & expression)
 	}
 }
 
-varLiteral Interpreter::visit(Literal & expr)
+Var_literal Interpreter::visit(Literal & expr)
 {
 	return expr.value;
 }
 
-varLiteral Interpreter::visit(Grouping & expr)
+Var_literal Interpreter::visit(Grouping & expr)
 {
 	return evaluate(expr.expression);
 }
 
-varLiteral Interpreter::visit(Unary & expr)
+Var_literal Interpreter::visit(Unary & expr)
 {
-	varLiteral right = evaluate(expr.right);
+	Var_literal right = evaluate(expr.right);
 
 	switch (expr.op.type)
 	{
 	case TokenType::MINUS:
 		checkNumberOperand(expr.op, right);
-		return varLiteral(-std::get<double>(right));
+		return Var_literal(-std::get<double>(right));
 	case TokenType::BANG:
 		return !isTruthy(right);
 	}
 	//unreachable
-	return varLiteral(nullptr);
+	__assume(false);
 }
 
 
 
-varLiteral Interpreter::visit(Binary & expr)
+Var_literal Interpreter::visit(Binary & expr)
 {
-	varLiteral left = evaluate(expr.left);
-	varLiteral right = evaluate(expr.right);
+	Var_literal left = evaluate(expr.left);
+	Var_literal right = evaluate(expr.right);
 
 	switch (expr.op.type)
 	{
 	case TokenType::MINUS:
 		checkNumberOperands(expr.op, left, right);
-		return varLiteral(std::get<double>(left) - std::get<double>(right));
+		return Var_literal(std::get<double>(left) - std::get<double>(right));
 	case TokenType::SLASH:
 		checkNumberOperands(expr.op, left, right);
 		checkDivisionByZero(expr.op, right);
-		return varLiteral(std::get<double>(left) / std::get<double>(right));
+		return Var_literal(std::get<double>(left) / std::get<double>(right));
 	case TokenType::STAR:
 		checkNumberOperands(expr.op, left, right);
-		return varLiteral(std::get<double>(left) * std::get<double>(right));
+		return Var_literal(std::get<double>(left) * std::get<double>(right));
 	case TokenType::PLUS:
 		if (std::holds_alternative<double>(left) && std::holds_alternative<double>(right))
 		{
-			return varLiteral(std::get<double>(left) + std::get<double>(right));
+			return Var_literal(std::get<double>(left) + std::get<double>(right));
 		}
 		if (std::holds_alternative<std::string>(left) && std::holds_alternative<std::string>(right))
 		{
-			return varLiteral(std::get<std::string>(left) + std::get<std::string>(right));
+			return Var_literal(std::get<std::string>(left) + std::get<std::string>(right));
 		}
 		throw LRunTimeError(expr.op, "Operands must be two numbers or two strings");
 	case TokenType::GREATER:
 		checkNumberOperands(expr.op, left, right);
-		return varLiteral(std::get<double>(left) > std::get<double>(right));
+		return Var_literal(std::get<double>(left) > std::get<double>(right));
 	case TokenType::GREATER_EQUAL:
 		checkNumberOperands(expr.op, left, right);
-		return varLiteral(std::get<double>(left) >= std::get<double>(right));
+		return Var_literal(std::get<double>(left) >= std::get<double>(right));
 	case TokenType::LESS:
 		checkNumberOperands(expr.op, left, right);
-		return varLiteral(std::get<double>(left) < std::get<double>(right));
+		return Var_literal(std::get<double>(left) < std::get<double>(right));
 	case TokenType::LESS_EQUAL:
 		checkNumberOperands(expr.op, left, right);
-		return varLiteral(std::get<double>(left) <= std::get<double>(right));
+		return Var_literal(std::get<double>(left) <= std::get<double>(right));
 	case TokenType::EQUAL_EQUAL:
 		return isEqual(left, right);
 	case TokenType::BANG_EQUAL:
@@ -99,11 +99,11 @@ varLiteral Interpreter::visit(Binary & expr)
 	}
 
 	//unreachable
-	return varLiteral(nullptr);
+	__assume(false);
 
 }
 
-bool Interpreter::isTruthy(varLiteral v)
+bool Interpreter::isTruthy(Var_literal v)
 {
 	if (std::holds_alternative<nullptr_t>(v))
 	{
@@ -117,7 +117,7 @@ bool Interpreter::isTruthy(varLiteral v)
 	return true;
 }
 
-bool Interpreter::isEqual(varLiteral a, varLiteral b)
+bool Interpreter::isEqual(Var_literal a, Var_literal b)
 {
 	if (std::holds_alternative<nullptr_t>(a) && std::holds_alternative<nullptr_t>(b))
 	{
@@ -131,7 +131,7 @@ bool Interpreter::isEqual(varLiteral a, varLiteral b)
 	return a == b;
 }
 
-void Interpreter::checkNumberOperand(Token op, varLiteral operand)
+void Interpreter::checkNumberOperand(Token op, Var_literal operand)
 {
 	if (std::holds_alternative<double>(operand))
 	{
@@ -141,7 +141,7 @@ void Interpreter::checkNumberOperand(Token op, varLiteral operand)
 	throw LRunTimeError(op, "Operand must be a number");
 }
 
-void Interpreter::checkNumberOperands(Token op, varLiteral left, varLiteral right)
+void Interpreter::checkNumberOperands(Token op, Var_literal left, Var_literal right)
 {
 	if (std::holds_alternative<double>(left) && std::holds_alternative<double>(right))
 	{
@@ -151,7 +151,7 @@ void Interpreter::checkNumberOperands(Token op, varLiteral left, varLiteral righ
 	throw LRunTimeError(op, "Operands must be numbers");
 }
 
-void Interpreter::checkDivisionByZero(Token op, varLiteral right)
+void Interpreter::checkDivisionByZero(Token op, Var_literal right)
 {
 	if (std::get<double>(right) == 0.0)
 	{

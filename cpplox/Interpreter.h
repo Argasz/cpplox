@@ -28,24 +28,27 @@ public:
 	Interpreter();
 	virtual ~Interpreter();
 
-	void interpret(Expr& expression);
+	void interpret(const Expr& expression) const;
 
-	varLiteral visit(Literal& expr);
-	varLiteral visit(Grouping& expr);
-	varLiteral visit(Unary& expr);
-	varLiteral visit(Binary& expr);
+	Var_literal visit(Literal& expr);
+	Var_literal visit(Grouping& expr);
+	Var_literal visit(Unary& expr);
+	Var_literal visit(Binary& expr);
+	Var_literal visit(Variable& expr) {};
+	Var_literal visit(ExpressionStmt& stmt) {};
+	Var_literal visit(PrintStmt& stmt) {};
 
 private:
-	varLiteral evaluate(Expr& expr)
+	Var_literal evaluate(const Expr& expr) const
 	{
 		return expr.accept(*this);
 	}
 
-	bool isTruthy(varLiteral v);
-	bool isEqual(varLiteral a, varLiteral b);
-	void checkNumberOperand(Token op, varLiteral operand);
-	void checkNumberOperands(Token op, varLiteral left, varLiteral right);
-	void checkDivisionByZero(Token op, varLiteral right);
+	bool isTruthy(Var_literal v);
+	bool isEqual(Var_literal a, Var_literal b);
+	void checkNumberOperand(Token op, Var_literal operand);
+	void checkNumberOperands(Token op, Var_literal left, Var_literal right);
+	void checkDivisionByZero(Token op, Var_literal right);
 };
 
 

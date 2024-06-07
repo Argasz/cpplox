@@ -9,7 +9,6 @@
 
 bool hadError = false;
 bool hadRuntimeError = false;
-Interpreter* interpreter = new Interpreter();
 
 int main(int argc, char* argv[])
 {
@@ -22,7 +21,7 @@ int main(int argc, char* argv[])
 	{
 		return runFile(argv[1]);
 	}
-	else 
+	else
 	{
 		return runPrompt();
 	}
@@ -32,7 +31,7 @@ int runFile(const std::string& path)
 {
 	std::ifstream inFile;
 	inFile.open(path, std::fstream::in);
-	std::string content( (std::istreambuf_iterator<char>(inFile)), (std::istreambuf_iterator<char>()));
+	std::string content((std::istreambuf_iterator<char>(inFile)), (std::istreambuf_iterator<char>()));
 
 	run(content);
 
@@ -40,7 +39,7 @@ int runFile(const std::string& path)
 		return 65;
 	if (hadRuntimeError)
 		return 70;
-	
+
 	return 0;
 }
 
@@ -50,7 +49,7 @@ int runPrompt()
 	{
 		std::cout << "\n> ";
 		char input[255];
-		std::cin.getline(input,255);
+		std::cin.getline(input, 255);
 		run(input);
 		hadError = false;
 	}
@@ -60,24 +59,25 @@ int runPrompt()
 int run(const std::string& source)
 {
 	Scanner scanner(source);
-	std::vector<Token*> tokens = scanner.scanTokens();
-	Parser parser(tokens);
-	Expr* expression = parser.parse();
+	std::vector<Token> tokens = scanner.scanTokens();
+	auto parser = Parser(tokens);
+	auto expression = parser.parse();
 	if (hadError) return 1;
 
-	interpreter->interpret(*expression);
+	const auto interpreter = Interpreter();
+	interpreter.interpret(expression);
 
 	return 0;
 }
 
 void cpploxError(int line, const std::string& message)
 {
-	report(line,"",message);
+	report(line, "", message);
 }
 
 void report(int line, const std::string& whence, const std::string& message)
 {
-	fprintf(stderr, "[line %d ] Error %s: %s\n",line, whence.c_str(), message.c_str());
+	fprintf(stderr, "[line %d ] Error %s: %s\n", line, whence.c_str(), message.c_str());
 	hadError = true;
 }
 
@@ -98,4 +98,17 @@ void runtimeError(const LRunTimeError& e)
 	std::cout << e.what();
 	std::cout << "\n[line " << e.token.line << "]";
 	hadRuntimeError = true;
+}
+
+void unpack_write_to_stream(std::ostream& stream, const Var_literal& var) {
+	if (std::holds_alternative<std::monostate>(var)) { // Should prevent error due to missing << operator for std::monostate
+		stream << " empty ";
+	}
+	else
+	{
+		auto visitorLambda = [&stream](auto&& _in) {
+			return _in;
+		};
+		stream << " " << std::visit(visitorLambda, var) << " ";
+	}
 }

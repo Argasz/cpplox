@@ -1,31 +1,31 @@
-
+#pragma once
 #include "Parser.h"
 #include "cpplox.h"
 #include <vector>
 #include "Stmt.h"
 
-typedef std::variant<std::string, double, bool, std::nullptr_t, std::monostate> varLiteral;
+typedef std::variant<std::string, double, bool, std::nullptr_t, std::monostate> Var_literal;
 
 Parser::~Parser()
 {
 }
 
-std::vector<Stmt*>* Parser::parse()
+std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
-	auto stmts = new std::vector<Stmt*>();
+	auto stmts = std::vector<std::unique_ptr<Stmt>>();
 	while (!isAtEnd())
 	{
-		stmts->push_back(statement());
+		stmts.push_back(statement());
 	}
 	return stmts;
 }
 
-Expr* Parser::expression()
+std::unique_ptr<Expr> Parser::expression()
 {
 	return equality();
 }
 
-Stmt * Parser::statement()
+std::unique_ptr<Stmt> Parser::statement()
 {
 	if (match({ TokenType::PRINT }))
 	{
@@ -35,22 +35,22 @@ Stmt * Parser::statement()
 	return expressionStatement();
 }
 
-Stmt * Parser::printStatement()
+std::unique_ptr<Stmt> Parser::printStatement()
 {
-	Expr* value = expression();
+	auto value = expression();
 	consume(TokenType::SEMICOLON, "Expect ';' after value.");
-	return new PrintStmt(*value);
+	return value;
 }
 
-Stmt * Parser::expressionStatement()
+std::unique_ptr<Stmt> Parser::expressionStatement()
 {
-	Expr* expr = expression();
+	auto expr = expression();
 	consume(TokenType::SEMICOLON, "Expect ';' after expression.");
-	return new ExpressionStmt(*expr);
+	return std::make_unique<ExpressionStmt>(expr);
 
 }
 
-Stmt * Parser::declarationStatement()
+std::unique_ptr<Stmt> Parser::declarationStatement()
 {
 	try {
 		if (match({ TokenType::VAR }))
@@ -64,7 +64,7 @@ Stmt * Parser::declarationStatement()
 	}
 }
 
-Stmt * Parser::varDeclarationStatement()
+std::unique_ptr<Stmt> Parser::varDeclarationStatement()
 {
 	Token name = consume(TokenType::IDENTIFIER, "Expect variable name");
 	Expr* initializer;
@@ -76,14 +76,14 @@ Stmt * Parser::varDeclarationStatement()
 	return new VarStmt(name, initializer);
 }
 
-Expr* Parser::equality()
+std::unique_ptr<Expr> Parser::equality()
 {
-	Expr* expr = comparison();
+	auto expr = comparison();
 
 	while (match({ TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL }))
 	{
 		Token op = previous();
-		Expr* right = comparison();
+		auto right = comparison();
 		expr = new Binary(*expr, op, *right);
 		/*auto bin = new Binary(expr, op, right);
 		return *bin;*/
@@ -92,14 +92,14 @@ Expr* Parser::equality()
 	return expr;
 }
 
-Expr* Parser::comparison()
+std::unique_ptr<Expr> Parser::comparison()
 {
-	Expr* expr = addition();
+	auto expr = addition();
 
 	while (match({ TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL }))
 	{
 		Token op = previous();
-		Expr* right = addition();
+		auto right = addition();
 		expr = new Binary(*expr, op, *right);
 		/*auto bin = new Binary(expr, op, right);
 		return *bin;*/
@@ -108,15 +108,15 @@ Expr* Parser::comparison()
 	return expr;
 }
 
-Expr* Parser::addition()
+std::unique_ptr<Expr> Parser::addition()
 {
-	Expr* expr = multiplication();
+	auto expr = multiplication();
 
 	while (match({ TokenType::MINUS, TokenType::PLUS }))
 	{
 		Token op = previous();
-		Expr* right = multiplication();
-		expr = new Binary(*expr, op, *right);
+		auto right = multiplication();
+		expr = new Binary(expr, op, right);
 		//auto bin = new Binary(expr, op, right);
 		//return *bin;
 	}
@@ -124,15 +124,16 @@ Expr* Parser::addition()
 	return expr;
 }
 
-Expr* Parser::multiplication()
+std::unique_ptr<Expr> Parser::multiplication()
 {
-	Expr* expr = unary();
+	auto expr = unary();
 
 	while (match({ TokenType::SLASH, TokenType::STAR }))
 	{
 		Token op = previous();
-		Expr* right = unary();
-		expr = new Binary(*expr, op, *right);
+		auto right = unary();
+		// I think this works because the original expr pointer will be moved into the new Expr and then the now nulled expr pointer can be reassigned safely
+		expr = std::make_unique<Expr>(expr, op, right);
 		//auto ret = new Binary(expr, op, right);
 		//return *ret;
 	}
@@ -140,46 +141,46 @@ Expr* Parser::multiplication()
 	return expr;
 }
 
-Expr* Parser::unary()
+std::unique_ptr<Expr> Parser::unary()
 {
 	if (match({ TokenType::BANG, TokenType::MINUS }))
 	{
 		Token op = previous();
-		Expr* right = unary();
+		auto right = unary();
 		
-		return new Unary(op, *right);
+		return std::make_unique<Unary>(op, right);
 	}
 
 	return primary();
 }
 
-Expr* Parser::primary()
+std::unique_ptr<Expr> Parser::primary()
 {
-	varLiteral val;
+	Var_literal val;
 	if (match({ TokenType::FALSE }))
 	{ 
 		val = false;
-		return new Literal(val);
+		return std::make_unique<Literal>(val);
 	}
 	if (match({ TokenType::TRUE }))
 	{
 		val = true;
-		return new Literal(val);
+		return std::make_unique<Literal>(val);
 	}
 	if (match({ TokenType::NIL }))
 	{
 		val = nullptr;
-		return new Literal(val);
+		return std::make_unique<Literal>(val);
 	}
 	if (match({TokenType::NUMBER, TokenType::STRING}))
 	{
-		return new Literal(previous().lit);
+		return std::make_unique<Literal>(previous().lit);
 	}
 	if (match({ TokenType::LEFT_PAREN }))
 	{
-		Expr* expr = expression();
+		auto expr = expression();
 		consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
-		return new Grouping(*expr);
+		return std::make_unique<Grouping>(expr);
 	}
 	
 	throw error(peek(), "Expect expression.");
@@ -198,7 +199,7 @@ bool Parser::match(std::vector<TokenType> types)
 	return false;
 }
 
-Token& Parser::consume(TokenType type, std::string message) {
+Token Parser::consume(TokenType type, std::string message) {
 	if (check(type)) {
 		return advance();
 	}
@@ -214,7 +215,7 @@ bool Parser::check(TokenType type)
 	return peek().type == type;
 }
 
-Token& Parser::advance()
+Token Parser::advance()
 {
 	if (!isAtEnd())
 		current++;
@@ -222,19 +223,19 @@ Token& Parser::advance()
 	return previous();
 }
 
-bool Parser::isAtEnd()
+bool Parser::isAtEnd() const
 {
 	return peek().type == TokenType::EOFF;
 }
 
-Token& Parser::peek()
+Token Parser::peek() const
 {
-	return *tokens.at(current);
+	return tokens.at(current);
 }
 
-Token& Parser::previous()
+Token Parser::previous() const
 {
-	return *tokens.at(current-1);
+	return tokens.at(current-1);
 }
 
 ParseException Parser::error(const Token& token, const std::string& message)

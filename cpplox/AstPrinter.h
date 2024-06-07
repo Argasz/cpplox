@@ -6,10 +6,10 @@ class AstPrinter : public IExprVisitor
 {
 public:
 	AstPrinter() {};
-	virtual varLiteral visit(Binary&);
-	virtual varLiteral visit(Grouping&);
-	virtual varLiteral visit(Literal&);
-	virtual varLiteral visit(Unary&);
+	virtual Var_literal visit(Binary&);
+	virtual Var_literal visit(Grouping&);
+	virtual Var_literal visit(Literal&);
+	virtual Var_literal visit(Unary&);
 private:
 	std::string parenthesize(std::string& name, std::vector<Expr*> exprs);
 };
